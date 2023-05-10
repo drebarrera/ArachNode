@@ -1,0 +1,10 @@
+{
+    "application": "ArachNode Alpha",
+    "version": 0.01,
+    "mode": "Training",
+    "driver_headless": true,
+    "driver_browser_path": null,
+    "driver_executable_path": null,
+    "gateway_timeout": 10,
+    "base_url": "https://www.google.com/search?q="
+}
