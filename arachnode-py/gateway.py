@@ -7,9 +7,10 @@ class Gateway:
         self.base_url = base_url
         self.timeout = timeout
         self.WebDriver = driver.Driver(self.base_url, headless, browser_path, executable_path, self.timeout)
-        self.Portal = portal.Portal(self.WebDriver)
+        self.Portal = portal.Portal(self.WebDriver, 7)
 
     def run(self, query):
+        self.WebDriver.new_driver()
         packet = self.WebDriver.query(query)
         if self.mode == "Training":
             self.Portal.ui()

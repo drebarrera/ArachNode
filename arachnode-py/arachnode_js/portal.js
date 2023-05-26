@@ -12,10 +12,11 @@ function stage_2() {
     return true;
 }
 
-function stage_3(url) {
+function stage_3(url, relevance_depth) {
     var node = document.createElement("base");
     node.href = url;
     document.getElementsByTagName("head")[0].appendChild(node);
+    document.getElementsByTagName('html')[0].setAttribute('data-arachnode-relevance-depth',relevance_depth);
     node.onload = document.getElementsByTagName('html')[0].setAttribute('data-arachnode-stage-3','true');
     return true;
 }

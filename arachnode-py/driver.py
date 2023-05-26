@@ -10,15 +10,16 @@ class Driver:
         self.browser_path = browser_path
         self.executable_path = executable_path
         self.timeout = timeout
-        self.webdriver = self.new_driver()
+        self.webdriver = None
         self.url = ""
 
     def new_driver(self):
         chromeOptions = webdriver.chrome.options.Options()
         if self.headless: chromeOptions.headless = True
         if self.browser_path: chromeOptions.binary_location = self.browser_path
-        if self.executable_path: return webdriver.Chrome(options=chromeOptions, executable_path=self.executable_path)
-        else: return webdriver.Chrome(options=chromeOptions)
+        if self.executable_path: self.webdriver = webdriver.Chrome(options=chromeOptions, executable_path=self.executable_path)
+        else: self.webdriver = webdriver.Chrome(options=chromeOptions)
+        return self.webdriver
         
     def query(self, query:str):
         self.url = self.base + query.replace(" ","+")
@@ -41,5 +42,9 @@ class Driver:
         try: return WebDriverWait(self.webdriver, timeout).until(EC.presence_of_element_located((By.XPATH, xpath)))
         except Exception as ex: return None
 
+    def stop(self):
+        if (self.webdriver): self.webdriver.quit()
+        self.webdriver = None
+
     def __del__(self):
-        self.webdriver.quit()
+        self.stop()
