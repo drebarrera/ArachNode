@@ -1,0 +1,92 @@
+<html>
+
+<body>
+    <script src="popup.js"></script>
+    <style>
+        p, h1, h2, h3, h4, h5, h6 {
+          margin-block-start: 5px;
+          margin-block-end: 5px;
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 20px;
+          height: 11px;
+        }
+        
+        /* Hide default HTML checkbox */
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        
+        /* The slider */
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          -webkit-transition: .2s;
+          transition: .2s;
+        }
+        
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 9px;
+          width: 9px;
+          left: 1px;
+          bottom: 1px;
+          background-color: white;
+          -webkit-transition: .2s;
+          transition: .2s;
+        }
+        
+        input:checked + .slider {
+          background-color: #2196F3;
+        }
+        
+        input:focus + .slider {
+          box-shadow: 0 0 1px #2196F3;
+        }
+        
+        input:checked + .slider:before {
+          -webkit-transform: translateX(10px);
+          -ms-transform: translateX(10px);
+          transform: translateX(10px);
+        }
+        
+        /* Rounded sliders */
+        .slider.round {
+          border-radius: 11px;
+        }
+        
+        .slider.round:before {
+          border-radius: 50%;
+        }
+    </style>
+    <div
+        style="height: 200px; width: 375px; border-radius: 10px; background-color: #333; color: white; padding: 15px; padding-top: 0px; overflow-y: auto;">
+        <h1 style="font-family: Helvetica; font-size: 30px; font-weight: 300; margin-top: 10px;">ArachNode Chrome<span style="font-size: 15px;" id="arachnode_version"></span></h1>
+        <div style = "width: 100%; height: auto; display: flex; flex-direction: row; align-items: center;">
+          <label class="switch" id="arachnode_switch">
+              <input type="checkbox">
+              <span class="slider round"></span>
+          </label>
+          <img src="../icon.png" style="height: 20px; margin-left: 10px;" id="arachnode_toggle_icon"/>
+          <p id="arachnode_toggle_status" style="font-size: 18px; margin-left: 5px;"></p>
+          
+          
+        </div>
+        <p style="font-size: 18px; white-space: pre-line;">Message: <span id="message"
+                style="font-weight: 300; color: #ccc">[Error] JavaScript Disconnect.</span></p>
+    </div>
+</body>
+
+</html>

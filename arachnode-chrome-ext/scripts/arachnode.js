@@ -1,17 +1,22 @@
 var arachnode_status = "ArachNode Connected!\nWaiting on browser activity.";
+var arachnode_hierarchy = undefined;
+var arachnode_on = undefined;
 
-/*window.addEventListener('message', function(event) {
-    console.log(event.data);
-    if (event.data?.type == 'arachnode_status_req' && arachnode_status != event.data.msg) {
-        event.source.postMessage({type: 'arachnode_status_res', msg: arachnode_status});
-    }
-});*/
+HTMLAnchorElement.prototype.originalAddEventListener = HTMLAnchorElement.prototype.addEventListener;
+
+HTMLAnchorElement.prototype.addEventListener = (type, event, c) => {
+    if (type == 'click') $(this).attr('data-clickable', 'true');
+};
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type == 'arachnode_status_req' && arachnode_status != (message.msg ?? [undefined])[0]) {
-        response = { type: "arachnode_status_res", id: message.id, msg: arachnode_status };
-        console.log(response);
+        response = { type: "arachnode_status_res", id: message.id, msg: [arachnode_status, arachnode_hierarchy] };
         sendResponse(response);
+        setTimeout(() => {
+            arachnode_hierarchy = undefined;
+        }, 500);
+    } else if (message?.type == 'arachnode_toggle') {
+        arachnode_on = message.msg;
     }
 });
 
@@ -45,24 +50,13 @@ function getElementHierarchy(elem) {
             }
             hierarchy.push(getAttributes(this, "self", 0));
         }
-        if ($.contains(elem, this)) hierarchy.push(getAttributes(this, "descendant", -1));
+        /*if ($.contains(elem, this)) {
+            var this_attrs = getAttributes(this, "descendant", -1);
+            if (this_attrs['text'].length != 0)  hierarchy.push(this_attrs);
+        }*/
         if ($(this).siblings().filter($(elem)).length > 0) hierarchy.push(getAttributes(this, "sibling", 0));
     });
     return JSON.stringify(hierarchy);
-}
-
-function extractSource() {
-    var hierarchy = iterateElements(document.documentElement, 0, []);
-    console.log(hierarchy);
-}
-
-function iterateElements(element, depth, hierarchy) {
-    var children = element.children;
-    hierarchy.push(getAttributes(element));
-    for (var i = 0; i < children.length; i++) {
-        iterateElements(children[i], depth + 1, hierarchy);
-    }
-    return hierarchy;
 }
 
 function getText(element, text, depth, last_tag) {
@@ -126,33 +120,53 @@ var defaultResponseTriggered = false;
 function clickResponse(e) {
     if (!clickResponseTriggered) {
         clickResponseTriggered = true;
-        console.log(clickedElements[0]);
-        arachnode_status = "User clicked on '" + $(clickedElements[0]).html() + "'";
-        console.log(getElementHierarchy(clickedElements[0]));
+        var clickedElement = clickedElements[0];
+        for (var i = 0; i < clickedElements.length; i++) {
+            var subject = clickedElements[i];
+            var hasChild = false;
+            for (var j = i + 1; j < clickedElements.length; j++) {
+                if ($.contains(subject, clickedElements[j])) {
+                    hasChild = true;
+                    break;
+                }
+            }
+            if (!hasChild) {
+                clickedElement = subject;
+                break;
+            }
+        }
+        console.log(clickedElement);
+        element_html_shorthand = $(clickedElement).html();
+        if (element_html_shorthand.length > 200) element_html_shorthand = element_html_shorthand.substring(0, 200) + '...';
+        arachnode_status = "User clicked on '" + element_html_shorthand + "'";
+        arachnode_hierarchy = getElementHierarchy(clickedElement);
+        console.log(arachnode_hierarchy);
         clickedElements = [];
         setTimeout(() => {
             defaultResponseTriggered = true;
             $(e.target).trigger('click');
+            if (e.target.href) window.location.href = e.target.href;
             clickResponseTriggered = false;
             setTimeout(() => {
                 defaultResponseTriggered = false;
             }, 100)
-        }, 1000);
+        }, 2000);
     }
 }
 
 $(document).ready(function () {
     $(document).find('*').each(function () {
-        if ($(this).hasOwnProperty('click') || $(this).is('[onclick]') || ($(this).is('a') && $(this).prop('href'))) $(this).attr('data-clickable', 'true');
+        if ($(this).hasOwnProperty('click') || $(this).is('[onclick]') || ($(this).is('a') && $(this).prop('href') || $(this).attr('data-clickable'))) $(this).attr('data-clickable', 'true');
         else $(this).attr('data-clickable', 'false');
-        $(this).click((e) => {
-            if (!defaultResponseTriggered) {
-                e.stopPropagation();
-                e.preventDefault();
+        $(this).on("click dblclick", (e) => {
+            if (arachnode_on) {
                 clickedElements.push(this);
-                setTimeout(() => {
-                    clickResponse(e);
-                }, 100);
+                if (!defaultResponseTriggered) {
+                    e.preventDefault();
+                    setTimeout(() => {
+                        clickResponse(e);
+                    }, 100);
+                }
             }
         });
     });
