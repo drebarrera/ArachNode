@@ -6,18 +6,36 @@ var event_buffer = {};
 var arachnode_toggle = {};
 var new_tab = false;
 
-function updateStorage() {
+function init_tab(tabid) {
+    var v = chrome.runtime.getManifest().version;
+    message = 'New tab ' + tabid.toString() + ' has been created on Arachnode v.' + v + '.';
+    status_buffer[tabid] = [[message, (new Date()).toJSON()]];
+    arachnode_toggle[tabid] = true;
+    updateStorage(tabid);
+    new_tab = true;
+    uploadData({ action: 'create', id: tabid, content: message });
+    setTimeout(() => {
+        new_tab = false;
+    }, 1000);
+}
+
+function updateStorage(tabid) {
+    if (arachnode_toggle[tabid] == undefined) init_tab(tabid);
     //console.log({ arachnode_status: { status_buffer, event_buffer }, arachnode_toggle});
     chrome.storage.local.set({ arachnode_status: { status_buffer, event_buffer }, arachnode_toggle});
 }
 
 function uploadData(data) {
     if (data.action == 'create') {
-        event_buffer[data.id] = [];
+        event_buffer[data.id] = [data];
     } else if (data.action == 'append') {
         if (data.content != null && data.content != 'Element clicked: null') event_buffer[data.id].push(data);
+    } else if (data.action == 'intention') {
+        if (event_buffer[data.id].length > 1 && event_buffer[data.id][1].action == "intention") event_buffer[data.id].splice(1, 1, data);
+        else event_buffer[data.id].splice(1, 0, data);
+        console.log(event_buffer[data.id]);
     } else if (data.action == 'publish') {
-        if (event_buffer[data.id].length > 2) {
+        if (event_buffer[data.id].length > 4) {
             console.log('PUBLISH', data.id);
             console.log(event_buffer[data.id]);
             var datetime = new Date().toJSON();
@@ -31,10 +49,6 @@ function uploadData(data) {
                 }
                 events[ei] = events[ei].content;
             }
-            chrome.management.get(chrome.runtime.id, function (extensionInfo) {
-                console.log(extensionInfo);
-            });
-          
             var filename = 'v' + v + '/' + datetime + data.id + 'U' + url + '.json';
             fetch('https://d0sufy66n7.execute-api.us-east-2.amazonaws.com/arachnode-corpus-v1/' + filename, {
                 method: 'PUT',
@@ -43,9 +57,9 @@ function uploadData(data) {
             }).then(function (response) {
                 if (response.ok) return response;
                 else return Promise.reject(response);
-            }).then(function (data) {
-                console.log(data);
-                uploadData({ action: 'delete', id: data.id });
+            }).then(function (d) {
+                console.log(d);
+                uploadData({ action: 'delete', id: data.id});
             }).catch(function (err) {
                 console.warn('Something went wrong.', err);
             });
@@ -56,7 +70,7 @@ function uploadData(data) {
         delete status_buffer[data.id];
         delete arachnode_toggle[data.id];
     }
-    updateStorage();
+    updateStorage(data.id);
     //console.log(event_buffer);
     
 }
@@ -97,21 +111,35 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type == "arachnode_toggle") {
         arachnode_toggle[request.id] = request.msg;
-        updateStorage();
+        updateStorage(request.id);
+    } else if (request.type == "arachnode_intention" || request.type == "arachnode_intention_quiet") {
+        var message = 'Search intention changed to: ' + request.msg;
+        chrome.tabs.get(request.id, (tab) => {
+            if (tab.url == "chrome://newtab/" || tab.url == 'https://www.google.com/') {
+                chrome.tabs.update(request.id, {url: 'https://www.google.com/search?q=' + request.msg});
+                status_buffer[request.id].unshift([message, (new Date()).toJSON()]);
+                uploadData({action: 'intention', id: request.id, content: message});
+            }
+            else {
+                if (request.type == "arachnode_intention") {
+                    chrome.tabs.create({}, (tab) => {
+                        chrome.tabs.update(tab.id, {url: 'https://www.google.com/search?q=' + request.msg});
+                        setTimeout(() => {
+                            status_buffer[tab.id].unshift([message, (new Date()).toJSON()]);
+                            uploadData({action: 'intention', id: tab.id, content: message});
+                        }, 100);
+                    });
+                } else {
+                    status_buffer[request.id].unshift([message, (new Date()).toJSON()]);
+                    uploadData({action: 'intention', id: request.id, content: message});
+                }
+            }
+        });
     }
 });
 
 chrome.tabs.onCreated.addListener((tab) => {
-    var v = chrome.runtime.getManifest().version;
-    message = 'New tab ' + tab.id.toString() + ' has been created on Arachnode v.' + v + '.';
-    status_buffer[tab.id] = [[message, (new Date()).toJSON()]];
-    arachnode_toggle[tab.id] = true;
-    updateStorage();
-    new_tab = true;
-    uploadData({ action: 'create', id: tab.id, content: message });
-    setTimeout(() => {
-        new_tab = false;
-    }, 1000);
+    init_tab(tab.id);
 });
 
 function updatePopupContent() {

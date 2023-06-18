@@ -30,7 +30,7 @@ function getElementHierarchy(elem) {
             last_ancestors.push(this);
             if (last_ancestors.length > relevance_depth) last_ancestors.shift();
         }
-        if (this == elem) {
+        else if (this == elem) {
             last_ancestors.push(this);
             for (var i = 0; i < relevance_depth; i++) {
                 var current_ancestor = hierarchy.length - relevance_depth + i;
@@ -50,11 +50,11 @@ function getElementHierarchy(elem) {
             }
             hierarchy.push(getAttributes(this, "self", 0));
         }
+        else if ($(this).siblings().filter($(elem)).length > 0) hierarchy.push(getAttributes(this, "sibling", 0));
         /*if ($.contains(elem, this)) {
             var this_attrs = getAttributes(this, "descendant", -1);
             if (this_attrs['text'].length != 0)  hierarchy.push(this_attrs);
         }*/
-        if ($(this).siblings().filter($(elem)).length > 0) hierarchy.push(getAttributes(this, "sibling", 0));
     });
     return JSON.stringify(hierarchy);
 }

@@ -47,7 +47,21 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePopupContent();
         });
     });
-    document.querySelector('#arachnode_switch').addEventListener("click",(e) => {
+    chrome.storage.local.get(["arachnode_status"]).then((response) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (document.readyState == "complete" && response.arachnode_status.status_buffer[tabs[0].id]) {
+                var messages = response.arachnode_status.status_buffer[tabs[0].id];
+                for (var i = 0; i < messages.length; i++) {
+                    if (messages[i][0].split(': ')[0] == 'Search intention changed to') {
+                        document.querySelector('#search_box').value = messages[i][0].split(': ')[1];
+                        document.querySelector('#search_box').style.border = '3px solid #2196F3';
+                        break;
+                    } 
+                }
+            }
+        });
+    });
+    document.querySelector('#arachnode_switch').addEventListener("click", (e) => {
         if (allow_toggle) {
             allow_toggle = false;
             setTimeout(() => {
@@ -59,6 +73,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     allow_toggle = true;
                 });
             }, 100);
+        }
+    });
+    document.querySelector('#search').addEventListener("click", (e) => {
+        if (document.querySelector('#search_box').value) {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.runtime.sendMessage({ type: "arachnode_intention", id: tabs[0].id, msg: document.querySelector('#search_box').value });
+                document.querySelector('#search_box').style.border = '3px solid #2196F3';
+            });
+        }
+    });
+    document.querySelector('#search_box').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                alert('Intention set: ' + document.querySelector('#search_box').value);
+                chrome.runtime.sendMessage({ type: "arachnode_intention_quiet", id: tabs[0].id, msg: document.querySelector('#search_box').value });
+                document.querySelector('#search_box').style.border = '3px solid #2196F3';
+            });
         }
     });
 });
