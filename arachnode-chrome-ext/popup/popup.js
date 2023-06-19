@@ -6,7 +6,6 @@ function printMessage(msg) {
 }
 
 function updatePopupContent() {
-    console.log(arachnode_on);
     if (arachnode_on) {
         chrome.storage.local.get(["arachnode_status"]).then((response) => {
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -86,10 +85,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#search_box').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                alert('Intention set: ' + document.querySelector('#search_box').value);
                 chrome.runtime.sendMessage({ type: "arachnode_intention_quiet", id: tabs[0].id, msg: document.querySelector('#search_box').value });
                 document.querySelector('#search_box').style.border = '3px solid #2196F3';
             });
         }
+    });
+    document.querySelector('#logo').addEventListener("click", (e) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.runtime.sendMessage({ type: "arachnode_change_page", id: tabs[0].id, msg: 'chrome://extensions' });
+        });
     });
 });

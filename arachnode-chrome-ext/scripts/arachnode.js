@@ -1,12 +1,7 @@
+const RELEVANCE_DEPTH = 4;
 var arachnode_status = "ArachNode Connected!\nWaiting on browser activity.";
 var arachnode_hierarchy = undefined;
 var arachnode_on = undefined;
-
-HTMLAnchorElement.prototype.originalAddEventListener = HTMLAnchorElement.prototype.addEventListener;
-
-HTMLAnchorElement.prototype.addEventListener = (type, event, c) => {
-    if (type == 'click') $(this).attr('data-clickable', 'true');
-};
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type == 'arachnode_status_req' && arachnode_status != (message.msg ?? [undefined])[0]) {
@@ -23,17 +18,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function getElementHierarchy(elem) {
     var hierarchy = [];
     var last_ancestors = [];
-    var relevance_depth = parseInt(document.getElementsByTagName('html')[0].getAttribute('data-arachnode-relevance-depth'));
     $(document).find('*').each(function () {
         if ($.contains(this, elem)) {
             hierarchy.push(getAttributes(this, "ancestor"));
             last_ancestors.push(this);
-            if (last_ancestors.length > relevance_depth) last_ancestors.shift();
+            if (last_ancestors.length > RELEVANCE_DEPTH) last_ancestors.shift();
         }
         else if (this == elem) {
             last_ancestors.push(this);
-            for (var i = 0; i < relevance_depth; i++) {
-                var current_ancestor = hierarchy.length - relevance_depth + i;
+            for (var i = 0; i < RELEVANCE_DEPTH; i++) {
+                var current_ancestor = hierarchy.length - RELEVANCE_DEPTH + i;
                 var cousins = last_ancestors[i].children;
                 var pre = true;
                 for (var j = 0; j < cousins.length; j++) {
@@ -42,10 +36,10 @@ function getElementHierarchy(elem) {
                         continue;
                     }
                     if (pre == false) {
-                        hierarchy.splice(current_ancestor, 0, getAttributes(cousins[j], "cousin", relevance_depth - i - 1));
+                        hierarchy.splice(current_ancestor, 0, getAttributes(cousins[j], "cousin", RELEVANCE_DEPTH - i - 1));
                         current_ancestor += 1;
                     }
-                    else hierarchy.splice(current_ancestor + 1, 0, getAttributes(cousins[j], "cousin", relevance_depth - i - 1));
+                    else hierarchy.splice(current_ancestor + 1, 0, getAttributes(cousins[j], "cousin", RELEVANCE_DEPTH - i - 1));
                 }
             }
             hierarchy.push(getAttributes(this, "self", 0));
@@ -72,6 +66,8 @@ function getText(element, text, depth, last_tag) {
 }
 
 function getAttributes(elem, relationship, depth = undefined) {
+    if ($(elem).hasOwnProperty('click') || $(elem).is('[onclick]') || ($(elem).is('a') && $(elem).prop('href')) || elem.tagName == "BUTTON" || $(elem).attr('data-clickable') || $(elem.parentNode).attr('data-clickable') == "true") $(elem).attr('data-clickable', 'true');
+    else $(elem).attr('data-clickable', 'false');
     var attrs = {};
     attrs['tag'] = $(elem).prop('tagName');
     var styles = window.getComputedStyle(elem);
@@ -113,63 +109,40 @@ async function sendJSON(data, url) {
     }
 }
 
-var clickedElements = [];
-var clickResponseTriggered = false;
 var defaultResponseTriggered = false;
 
-function clickResponse(e) {
-    if (!clickResponseTriggered) {
-        clickResponseTriggered = true;
-        var clickedElement = clickedElements[0];
-        for (var i = 0; i < clickedElements.length; i++) {
-            var subject = clickedElements[i];
-            var hasChild = false;
-            for (var j = i + 1; j < clickedElements.length; j++) {
-                if ($.contains(subject, clickedElements[j])) {
-                    hasChild = true;
-                    break;
-                }
-            }
-            if (!hasChild) {
-                clickedElement = subject;
-                break;
-            }
-        }
-        console.log(clickedElement);
-        element_html_shorthand = $(clickedElement).html();
-        if (element_html_shorthand.length > 200) element_html_shorthand = element_html_shorthand.substring(0, 200) + '...';
-        arachnode_status = "User clicked on '" + element_html_shorthand + "'";
-        arachnode_hierarchy = getElementHierarchy(clickedElement);
-        console.log(arachnode_hierarchy);
-        clickedElements = [];
+function clickResponse(clickedElement) {
+    console.log(clickedElement);
+    var element_html_shorthand = $(clickedElement).html();
+    if (element_html_shorthand.length > 200) element_html_shorthand = element_html_shorthand.substring(0, 200) + '...';
+    arachnode_status = "User clicked on '" + element_html_shorthand + "'";
+    arachnode_hierarchy = getElementHierarchy(clickedElement);
+    console.log(arachnode_hierarchy);
+    clickedElements = [];
+    setTimeout(() => {
+        defaultResponseTriggered = true;
+        //$(clickedElement).trigger('click');
+        //if (clickedElement.href) window.location.href = clickedElement.href;
         setTimeout(() => {
-            defaultResponseTriggered = true;
-            $(e.target).trigger('click');
-            if (e.target.href) window.location.href = e.target.href;
-            clickResponseTriggered = false;
-            setTimeout(() => {
-                defaultResponseTriggered = false;
-            }, 100)
-        }, 2000);
-    }
+            defaultResponseTriggered = false;
+        }, 100)
+    }, 2000);
 }
 
 $(document).ready(function () {
-    $(document).find('*').each(function () {
-        if ($(this).hasOwnProperty('click') || $(this).is('[onclick]') || ($(this).is('a') && $(this).prop('href') || $(this).attr('data-clickable'))) $(this).attr('data-clickable', 'true');
-        else $(this).attr('data-clickable', 'false');
-        $(this).on("click dblclick", (e) => {
-            if (arachnode_on) {
-                clickedElements.push(this);
-                if (!defaultResponseTriggered) {
-                    e.preventDefault();
-                    setTimeout(() => {
-                        clickResponse(e);
-                    }, 100);
-                }
-            }
-        });
-    });
+    $(document).on("click dblclick", (e) => {
+        /*if (!defaultResponseTriggered) {
+            e.stopPropagation();
+            e.preventDefault();
+            setTimeout(() => {
+                clickResponse(e.target);
+            }, 100);
+        }*/
+        e.stopPropagation();
+        e.preventDefault();
+        e.target.stopPropagation();
+        e.target.preventDefault();
+    })
 });
 
 document.getElementsByTagName('html')[0].setAttribute('data-arachnode-stage-2', 'true');
