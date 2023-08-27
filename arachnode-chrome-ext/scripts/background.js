@@ -172,7 +172,7 @@ chrome.storage.local.get(["arachnode_status"]).then((response) => {
                         if (response?.type == 'arachnode_status_res') {
                             if (!status_buffer.hasOwnProperty(response.id)) status_buffer[response.id] = [];
                             status_buffer[response.id].unshift([response.msg[0], (new Date()).toJSON()]);
-                            uploadData({ action: 'append', id: response.id, content: 'Element clicked: ' + response.msg[1] });
+                            uploadData({ action: 'append', id: response.id, content: 'Element asserted: ' + response.msg[1] });
                         }
                     });
                     chrome.tabs.sendMessage(tabs[i].id, {type: 'arachnode_toggle', id: tabs[i].id, msg: arachnode_toggle[tabs[i].id]});

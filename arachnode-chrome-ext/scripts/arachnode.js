@@ -1,7 +1,16 @@
 const RELEVANCE_DEPTH = 4;
+const PASSABLE_TEXT_QUANTIFIER = 100;
 var arachnode_status = "ArachNode Connected!\nWaiting on browser activity.";
 var arachnode_hierarchy = undefined;
 var arachnode_on = undefined;
+
+document.addEventListener('DOMContentLoaded', () => {
+    customElements.define('selection', class extends HTMLElement {
+        connectedCallback() {
+            this.innerHTML = '<p>Hello from my custom tag!</p>';
+        }
+    });
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type == 'arachnode_status_req' && arachnode_status != (message.msg ?? [undefined])[0]) {
@@ -17,40 +26,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 function getElementHierarchy(elem) {
     var hierarchy = [];
-    var last_ancestors = [];
+
     $(document).find('*').each(function () {
-        if ($.contains(this, elem)) {
-            hierarchy.push(getAttributes(this, "ancestor"));
-            last_ancestors.push(this);
-            if (last_ancestors.length > RELEVANCE_DEPTH) last_ancestors.shift();
-        }
-        else if (this == elem) {
-            last_ancestors.push(this);
-            for (var i = 0; i < RELEVANCE_DEPTH; i++) {
-                var current_ancestor = hierarchy.length - RELEVANCE_DEPTH + i;
-                var cousins = last_ancestors[i].children;
-                var pre = true;
-                for (var j = 0; j < cousins.length; j++) {
-                    if (cousins[j] == last_ancestors[i + 1]) {
-                        pre = false;
-                        continue;
-                    }
-                    if (pre == false) {
-                        hierarchy.splice(current_ancestor, 0, getAttributes(cousins[j], "cousin", RELEVANCE_DEPTH - i - 1));
-                        current_ancestor += 1;
-                    }
-                    else hierarchy.splice(current_ancestor + 1, 0, getAttributes(cousins[j], "cousin", RELEVANCE_DEPTH - i - 1));
-                }
-            }
-            hierarchy.push(getAttributes(this, "self", 0));
-        }
-        else if ($(this).siblings().filter($(elem)).length > 0) hierarchy.push(getAttributes(this, "sibling", 0));
-        /*if ($.contains(elem, this)) {
-            var this_attrs = getAttributes(this, "descendant", -1);
-            if (this_attrs['text'].length != 0)  hierarchy.push(this_attrs);
-        }*/
+        let $current = $(this);
+        let parent = $current.parent()[0];
+        let generation = 0;
+
+        if (parent != document) generation = parseInt($current.parent().attr('data-generation')) + 1;
+        $current.attr('data-generation', generation);
     });
-    return JSON.stringify(hierarchy);
+
+    $(document).find('*').each(function () {
+        let $current = $(this);
+        let depth = $(elem).attr('data-generation') - $current.attr('data-generation');
+        let parent = $current.parent()[0];
+
+        if ($.contains(this, elem)) {
+            if (depth <= RELEVANCE_DEPTH && depth > 1) hierarchy.push(getAttributes(this,"g", depth));
+            else if (depth == 1) hierarchy.push(getAttributes(this,"p", 1)); 
+            else hierarchy.push(getAttributes(this, "a", undefined, true));
+        } 
+        else if (this == elem) hierarchy.push(getAttributes(this, "e", 0));
+        else if ($current.parent()[0] == $(elem).parent()[0]) hierarchy.push(getAttributes(this, "s", undefined, true));
+    });
+    return hierarchy;
 }
 
 function getText(element, text, depth, last_tag) {
@@ -58,18 +57,18 @@ function getText(element, text, depth, last_tag) {
         var childNode = element.childNodes[i];
         if (childNode.nodeType === Node.TEXT_NODE) {
             var t = childNode.textContent.replace(/(?:\r\n|\r|\n)/g, '\\n');
-            if (!(/^[\\n\s]*$/).test(t)) text.push([t, depth, last_tag]);
+            if (!(/^[\\n\s]*$/).test(t) && last_tag != "STYLE") text.push([t, depth, last_tag]);
         }
         else if (childNode.nodeType === Node.ELEMENT_NODE && $(childNode).css('display') != 'none' && $(childNode).css('visibility') != 'hidden' && $(childNode).text() != '') getText(childNode, text, depth - 1, $(childNode).prop('tagName'));
     }
     return text;
 }
 
-function getAttributes(elem, relationship, depth = undefined) {
+function getAttributes(elem, relationship, depth = undefined, onlyTag=false) {
     if ($(elem).hasOwnProperty('click') || $(elem).is('[onclick]') || ($(elem).is('a') && $(elem).prop('href')) || elem.tagName == "BUTTON" || $(elem).attr('data-clickable') || $(elem.parentNode).attr('data-clickable') == "true") $(elem).attr('data-clickable', 'true');
     else $(elem).attr('data-clickable', 'false');
-    var attrs = {};
-    attrs['tag'] = $(elem).prop('tagName');
+    var attrs = {'tag': $(elem).prop('tagName'), 'entity': relationship};
+    if (onlyTag) return attrs;
     var styles = window.getComputedStyle(elem);
     var default_element = document.createElement(attrs['tag']);
     default_element.id = "arachnode";
@@ -85,9 +84,9 @@ function getAttributes(elem, relationship, depth = undefined) {
             attrs[this.name] = this.value;
         }
     });
-    attrs['data-entity'] = relationship;
     if (depth != undefined) {
-        attrs['text'] = getText(elem, [], depth, attrs['tag']);
+        let text = getText(elem, [], depth, attrs['tag']);
+        if (JSON.stringify(text).replaceAll('[','').replaceAll(']','').split(',').length < PASSABLE_TEXT_QUANTIFIER) attrs['text'] = text;
         attrs['depth'] = depth;
     }
     return attrs;
@@ -112,37 +111,63 @@ async function sendJSON(data, url) {
 var defaultResponseTriggered = false;
 
 function clickResponse(clickedElement) {
-    console.log(clickedElement);
+    //console.log(clickedElement);
+    console.log(clickedElement.tagName);
     var element_html_shorthand = $(clickedElement).html();
+    if (clickedElement == undefined) return;
     if (element_html_shorthand.length > 200) element_html_shorthand = element_html_shorthand.substring(0, 200) + '...';
-    arachnode_status = "User clicked on '" + element_html_shorthand + "'";
-    arachnode_hierarchy = getElementHierarchy(clickedElement);
+    if (clickedElement.tagName == "SELECTION") arachnode_status = "User selected '" + element_html_shorthand + "'";
+    else arachnode_status = "User clicked on '" + element_html_shorthand + "'";
+    let hierarchy = getElementHierarchy(clickedElement);
+    if (clickedElement.tagName == "SELECTION") hierarchy.unshift({"type": "SELECTION"});
+    else hierarchy.unshift({"type": "CLICK"});
+    arachnode_hierarchy = JSON.stringify(hierarchy);
     console.log(arachnode_hierarchy);
     clickedElements = [];
-    setTimeout(() => {
-        defaultResponseTriggered = true;
-        //$(clickedElement).trigger('click');
-        //if (clickedElement.href) window.location.href = clickedElement.href;
+    if (clickedElement.tagName != "SELECTION") {
         setTimeout(() => {
-            defaultResponseTriggered = false;
-        }, 100)
-    }, 2000);
+            defaultResponseTriggered = true;
+            $(clickedElement).trigger('click');
+            if (clickedElement.href) window.location.href = clickedElement.href;
+            setTimeout(() => {
+                defaultResponseTriggered = false;
+            }, 100)
+        }, 2000);
+    } else {
+        while (clickedElement.firstChild) {
+            clickedElement.parentNode.insertBefore(clickedElement.firstChild, clickedElement);
+        }
+        clickedElement.parentNode.removeChild(clickedElement);
+        console.log(clickedElement);
+    }
+    
 }
 
 $(document).ready(function () {
     $(document).on("click dblclick", (e) => {
-        /*if (!defaultResponseTriggered) {
+        if (!defaultResponseTriggered) {
             e.stopPropagation();
             e.preventDefault();
             setTimeout(() => {
-                clickResponse(e.target);
+                if (window.getSelection) {
+                    try {
+                        var range = window.getSelection().getRangeAt(0);
+                        var content = range.extractContents();
+                        if (content.hasChildNodes()) {
+                            var selection = document.createElement("selection");
+                            selection.appendChild(content);
+                            range.insertNode(selection);
+                            clickResponse(selection);
+                        } else {
+                            clickResponse(e.target);
+                        }
+                    } catch (err) {
+                        clickResponse(e.target);
+                    }
+                } else clickResponse(e.target);
             }, 100);
-        }*/
-        e.stopPropagation();
-        e.preventDefault();
-        e.target.stopPropagation();
-        e.target.preventDefault();
-    })
+        }
+    });
 });
 
 document.getElementsByTagName('html')[0].setAttribute('data-arachnode-stage-2', 'true');
