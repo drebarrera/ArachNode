@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Site</title>
+    <script src="scripts/jquery.js"></script>
+    <style>
+      #button {
+        color: green;
+      }
+      #button:hover {
+        color: red;
+      }
+    </style>
+    <script>
+      function click() {
+        alert("hi");
+      }
+
+      $(document).ready(function(){
+        document.getElementById("button2").onclick = function(){
+          alert("hi2");
+        };
+
+        $("#button3").on("click", function(){
+          alert("hi3");
+        });
+
+        $("#button4").click(function(){
+          alert("hi4");
+        });
+
+        document.getElementById("button5").addEventListener("click", function(){
+          alert("hi5");
+        });
+      })
+      
+    </script>
+  </head>
+  <body>
+    <article>
+      <header><h1>This is a Header</h1></header>
+      <div>
+        <h2>This is a div</h2>
+        <div id="button" onclick="click()">Button</div>
+        <div id="button2">Button2</div>
+        <div id="button3">Button3</div>
+        <div id="button4">Button4</div>
+        <div id="button5">Button5</div>
+        <a href="file:///Users/drebarrera/Documents/GitHub/ArachNode/arachnode-chrome-ext/test.html">Link</a>
+      </div>
+    </article>
+    
+  </body>
+</html>

@@ -65,7 +65,7 @@ function getText(element, text, depth, last_tag) {
 }
 
 function getAttributes(elem, relationship, depth = undefined, onlyTag=false) {
-    if ($(elem).hasOwnProperty('click') || $(elem).is('[onclick]') || ($(elem).is('a') && $(elem).prop('href')) || elem.tagName == "BUTTON" || $(elem).attr('data-clickable') || $(elem.parentNode).attr('data-clickable') == "true") $(elem).attr('data-clickable', 'true');
+    if ($(elem).hasOwnProperty('click') || (elem.onclick) || $(elem).is('[onclick]') || ($(elem).is('a') && $(elem).prop('href')) || elem.tagName == "BUTTON" || $(elem).attr('data-clickable') == "true" || $(elem.parentNode).attr('data-clickable') == "true") $(elem).attr('data-clickable', 'true');
     else $(elem).attr('data-clickable', 'false');
     var attrs = {'tag': $(elem).prop('tagName'), 'entity': relationship};
     if (onlyTag) return attrs;
@@ -111,8 +111,6 @@ async function sendJSON(data, url) {
 var defaultResponseTriggered = false;
 
 function clickResponse(clickedElement) {
-    //console.log(clickedElement);
-    console.log(clickedElement.tagName);
     var element_html_shorthand = $(clickedElement).html();
     if (clickedElement == undefined) return;
     if (element_html_shorthand.length > 200) element_html_shorthand = element_html_shorthand.substring(0, 200) + '...';
@@ -122,7 +120,7 @@ function clickResponse(clickedElement) {
     if (clickedElement.tagName == "SELECTION") hierarchy.unshift({"type": "SELECTION"});
     else hierarchy.unshift({"type": "CLICK"});
     arachnode_hierarchy = JSON.stringify(hierarchy);
-    console.log(arachnode_hierarchy);
+    console.log(hierarchy);
     clickedElements = [];
     if (clickedElement.tagName != "SELECTION") {
         setTimeout(() => {
