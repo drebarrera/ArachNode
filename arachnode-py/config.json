@@ -1,6 +1,6 @@
 {
-    "application": "ArachNode Alpha",
-    "version": 0.01,
+    "application": "ArachNode AI",
+    "version": 1.5,
     "mode": "Training",
     "driver_headless": true,
     "driver_browser_path": null,
