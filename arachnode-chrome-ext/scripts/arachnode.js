@@ -80,20 +80,24 @@ function getAttributes(elem, relationship, depth = undefined, onlyTag=false) {
     }
     const sheets = document.styleSheets;
     Array.from(sheets).forEach(sheet => {
-        Array.from(sheet.cssRules || []).forEach(rule => {
-            if (rule.selectorText && rule.selectorText.includes(":")) {
-                if (elem.matches(rule.selectorText)) {
-                    //hoverStyles = rule.style;
-                    for (let i = 0; i < rule.style.length; i++) {
-                        const propName = rule.style[i];
-                        const propValue = rule.style.getPropertyValue(propName);
-                        if (propValue != "") {
-                            attrs[propName + ":" + rule.selectorText.split(":")[1]] = propValue;
+        try {
+            Array.from(sheet.cssRules || []).forEach(rule => {
+                if (rule.selectorText && rule.selectorText.includes(":")) {
+                    if (elem.matches(rule.selectorText)) {
+                        //hoverStyles = rule.style;
+                        for (let i = 0; i < rule.style.length; i++) {
+                            const propName = rule.style[i];
+                            const propValue = rule.style.getPropertyValue(propName);
+                            if (propValue != "") {
+                                attrs[propName + ":" + rule.selectorText.split(":")[1]] = propValue;
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        } catch (e) {
+            console.log("Couldn't access cssRules for stylesheet: ", e)
+        }
     });
     $('#arachnode').remove();
     $.each(elem.attributes, function () {

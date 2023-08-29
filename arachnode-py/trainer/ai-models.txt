@@ -1,0 +1,25 @@
+Value Iteration: A dynamic programming algorithm used for finding the optimal policy in a finite Markov decision process. It directly computes the value function.
+  - Finite Markov Decision Process (MDP): Mathematical model used in reinforcement learning to describe an environment where an agent takes actions to achieve a goal; Defined by (S, A, P, R) where S is a finite set of states, A is a finite set of actions, P is the state transition probability P(s' | s, a), R is the reward function R(s, a, s')
+  - Value Function: Quantifies the expected return of being in a particular state.
+Policy Iteration: Similar to Value Iteration but focuses on finding the optimal policy directly, rather than the value function.
+  - Optimal policy: Strategy that specifies the best action to take in each state of the environment to achieve the highest expected cumulative reward over time.
+Q-Learning: An off-policy algorithm that learns the value of an action in a particular state and aims to find the optimal policy.
+  - Off-policy: An algorithm's ability to learn the optimal policy while following an exploratory or even random policy.
+SARSA (State-Action-Reward-State-Action): An on-policy algorithm that is very similar to Q-Learning but updates its Q-values based on the current policy's action.
+  - On policy: An algorithm's ability to learn the value of the policy being executed with a balance of exploration and exploitation.
+Deep Q-Network (DQN): Extends Q-Learning by using a neural network as a function approximator to deal with high-dimensional inputs.
+Double DQN: An extension of DQN that reduces overestimation bias by using two different networks for determining the best action and its value.
+Monte Carlo Methods: These are model-free algorithms that learn directly from episodes of experience, useful in environments with a large state space but a smaller sample is available.
+Temporal Difference (TD) Learning: A combination of Monte Carlo methods and dynamic programming, useful for partially observable environments.
+Actor-Critic Methods: These use both value function estimation (critic) and policy optimization (actor) to improve performance.
+Proximal Policy Optimization (PPO): A policy optimization algorithm that combines the benefits of Trust Region Policy Optimization (TRPO) and clipped value function objectives.
+Trust Region Policy Optimization (TRPO): Focuses on taking sufficiently small steps during optimization to ensure stability and robustness.
+Deterministic Policy Gradients (DPG): Useful in continuous action spaces, this algorithm directly optimizes the policy in the direction of higher return.
+Deep Deterministic Policy Gradients (DDPG): Combines DPG with neural network function approximators, tailored for environments with continuous action spaces.
+Twin Delayed DDPG (TD3): An extension of DDPG that addresses function approximation errors by using twin Q-networks.
+Soft Actor-Critic (SAC): An off-policy algorithm that aims for maximum entropy policies, making it more robust and effective in a wider range of tasks.
+Asynchronous Advantage Actor-Critic (A3C): Uses multiple agents in parallel to collect data, making learning more efficient.
+Hierarchical Reinforcement Learning (HRL): Decomposes the policy into multiple levels of abstraction, allowing for more efficient learning and better transferability.
+Inverse Reinforcement Learning (IRL): Learns the reward function of an observed agent, allowing for imitation of complex behaviors.
+Rainbow DQN: Combines multiple improvements on the DQN architecture to achieve state-of-the-art performance.
+C51: A variant of DQN that models the distribution of returns, rather than the expected return, providing a richer training signal.
