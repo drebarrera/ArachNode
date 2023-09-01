@@ -13,14 +13,17 @@ def import_json(filename):
         data = json.load(f)
     return data
 
+def string_json(data):
+    return json.dumps(data)
+
 def parse_json(data):
     return json.loads(data)
 
 def with_aws(func, *kargs):
     try:
-      return func(*kargs)
+        return func(*kargs)
     except Exception as err:
-        try: 
+        try:
             errname = err.response['Error']['Code']
         except Exception as e:
             print(e, err)
@@ -33,4 +36,4 @@ def with_aws(func, *kargs):
           os.system("python3 aws_token.py")
           os.chdir(cwd)
           print("Retry process after successful token generation.")
-          return with_aws(func)
+          return with_aws(func(*kargs))

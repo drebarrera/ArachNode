@@ -3,31 +3,57 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from time import sleep
+from util import import_file, string_json
 
-class Search:
+class SEARCH:
 	def __init__(self, file, webdriver=None):
 		self.file = file
 		self.intention = None
 		self.base_url = None
 		self.actions = list()
-		self.current = 0
+		self.current = -1
+		self.rollover = False
+		self.generation = None
 		self.Driver = webdriver
   
 	def verify(self, arachnode_js):
+		if self.actions == []: return None
+		return self.actions[self.current]
 		if self.actions[self.current]['type'] != 'SELECTION' and self.actions[self.current]['type'] != 'CLICK':
 			print("Err:", self.actions[self.current]['type'], "!= CLICK || SELECTION")
 			return None
 		self.Driver.get(self.base_url)
-		
-		sleep(10)
+		arachnode = import_file(arachnode_js)
+		self.Driver.exec(
+			f'''var script = document.createElement('script');
+    		script.src = "https://code.jquery.com/jquery-3.1.1.min.js";
+    		script.type = 'text/javascript';
+   			document.getElementsByTagName('head')[0].appendChild(script);''')
+		self.Driver.exec(
+			f'''var script = document.createElement('script');
+    		script.innerHTML = `{string_json(arachnode)[1:-1]}`;
+    		script.type = 'text/javascript';
+   			document.getElementsByTagName('head')[0].appendChild(script);''')
+		sleep(1)
+		string_json(self.actions[self.current])
+		test = self.Driver.exec(f'''return verify_element(`{string_json(self.actions[self.current])}`, `{self.generation}`);''')
+		print(test)
+		sleep(60)
 
 	def iterate(self):
+		self.current += 1
 		if self.current >= len(self.actions):
-			self.current = 0
+			self.rollover = True
+			self.current = -1
+			return
+		if self.actions == []: return
 		if self.actions[self.current]['type'] == 'URL_CHANGE':
 			self.base_url = self.actions[self.current]['content']
 			self.iterate()
-		self.current += 1
+		elif self.actions[self.current]['type'] == 'CLICK' or self.actions[self.current]['type'] == 'SELECTION':
+			for x in self.actions[self.current]['content']:
+				if x['entity'] == 'e':
+					self.generation = x['data-generation']
 		
 
 class WebDriver:

@@ -12,25 +12,26 @@ class TrainingCenter:
   def __init__(self, version):
     self.version = version
     self.files = set()
-    self.trained = set()
+    self.trained = {}
     self.data = list()
 
   def mock_update_files(self, filenum=-1):
-    res = os.listdir('mock-data')
+    res = os.listdir('storage/mock-data')
     if filenum == -1:
       for obj in res:
         self.files.add(obj)
     else: self.files.add(res[filenum])
 
   def mock_get_training_data(self, filename):
-    return import_file('mock-data/' + filename)
+    return import_file('storage/mock-data/' + filename)
 
-  def update_files(self):
+  def update_files(self, filenum=-1):
     # update self.trained
     res = s3.list_objects_v2(Bucket=bucket_name, Prefix='v' + self.version + '/')
-    for obj in res['Contents']:
-      self.files.add(obj['Key'])
-
+    if filenum == -1:
+      for obj in res['Contents']:
+        self.files.add(obj['Key'])
+    else: self.files.add(res['Contents'][filenum]['Key'])
   def update_trained(self):
     pass
 
@@ -41,9 +42,9 @@ class TrainingCenter:
 
   # Function: parse_search
   # Retrieves data from a training data file and returns a Search object.
-  def parse_search(self, search):
-    #** data = parse_json(with_aws(self.get_training_data, file)) # Parse JSON file from S3
-    data = parse_json(self.mock_get_training_data(search.file)) # Parse JSON file from S3
+  def parse_search(self, search, file):
+    data = parse_json(with_aws(self.get_training_data, file)) # Parse JSON file from S3
+    #** data = parse_json(self.mock_get_training_data(search.file)) # Parse JSON file from S3
     e_assert = False
     # Iterate over data object and populate Search object
     for d in data:

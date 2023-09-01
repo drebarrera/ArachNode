@@ -2,11 +2,18 @@
     "application": "ArachNode AI",
     "version": "1.4",
     "mode": "Train",
+    "model-version": "0.1",
+    "model-num-inputs": 1600,
+    "model-classifications": {"None": 0, "CLICK": 1},
+    "model-optimizer": "adam",
+    "model-lossf": "categorical_crossentropy",
+    "model-metrics": ["accuracy", "tf-tf.keras.metrics.AUC(name='auc')"],
+    "model-epochs": 5,
+    "model-batch-size": 1,
     "driver_headless": false,
     "driver_browser_path": null,
     "driver_executable_path": "./chromedriver",
     "driver_timeout": 10,
     "default_url": "https://www.google.com/search?q=",
-    "arachnode_js": "../arachnode-chrome-ext/scripts/arachnode.js",
-    "jquery_js": "../arachnode-chrome-ext/scripts/jquery.js"
+    "arachnode_js": "./scripts/arachnode-portable.js"
 }
