@@ -5,6 +5,7 @@
 > [!NOTE]
 > This project, **an AI model for data scraping using a website's structure**, was not brought to completion, but was left incomplete at training. This was primarily because the training of the model required intensive labeling of data using a terminal GUI. Given that I didn't have the time to implement this, the project was paused after a few short tests. The final test used 5 search instances with 32.8% measured accuracy is close to 1/3 which is what the 3-class output would produce if guessing blindly. The model itself used an input of 1,600 elements - training a model of this size would require thousands of search instances and automated labeling. This project would be an exciting one to pick up during my Master's with the aid of multiple local LLM instances to efficiently train the model in parallel.
 
+**Tools**: Python, JavaScript, HTML, CSS, Chrome Extensions, TensorFlow, Selenium, AWS, AWS IAM, AWS S3, AWS API Gateway, AWS Lambda
 
 <img src="assets/capture.webp" width="550">
 
