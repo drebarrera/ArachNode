@@ -1,13 +1,16 @@
 # ArachNode
 
-> [!NOTE]
-> This project was not brought to completion, but was left incomplete at training. This was primarily because the training of the model required intensive labeling of data using a terminal GUI. Given that I didn't have the time to implement this, the project was paused after a few short tests. The final test used 5 search instances with 32.8% measured accuracy is close to 1/3 which is what the 3-class output would produce if guessing blindly. The model itself used an input of 1,600 elements - training a model of this size would require thousands of search instances and automated labeling. This project would be an exciting one to pick up during my Master's with the aid of multiple local LLM instances to efficiently train the model in parallel.
+<img src="assets/logo.webp" height="48">
 
-For more information, see the [Case Study](https://www.drebarrera.com/project/arachnode)
+> [!NOTE]
+> This project, **an AI model for data scraping using a website's structure**, was not brought to completion, but was left incomplete at training. This was primarily because the training of the model required intensive labeling of data using a terminal GUI. Given that I didn't have the time to implement this, the project was paused after a few short tests. The final test used 5 search instances with 32.8% measured accuracy is close to 1/3 which is what the 3-class output would produce if guessing blindly. The model itself used an input of 1,600 elements - training a model of this size would require thousands of search instances and automated labeling. This project would be an exciting one to pick up during my Master's with the aid of multiple local LLM instances to efficiently train the model in parallel.
+
+
+<img src="assets/capture.webp" width="550">
 
 ### Challenge
 
-The challenge of ArachNode was to create an AI program capable of navigating the complex and dynamic landscape of the web to identify specific information based on structural components (tags, properties, and events). Traditional scraping methods often fall short in handling intricate navigation and decision-making. The goal was to design an intelligent system that could provide efficient browsing behavior, making decisions on when to click on links or backtrack, and do so with over 80% accuracy, an Area Under the Curve (AUC) over 0.85, and an F1-score over 0.8.
+The challenge of ArachNode was to create an AI program capable of navigating the complex and dynamic landscape of the web to identify specific information based on structural components (tags, properties, event bindings). Traditional scraping methods often fall short in handling intricate navigation and decision-making. The goal was to design an intelligent system that could provide efficient browsing behavior, making decisions on when to click on links or backtrack, and do so with over 80% accuracy, an Area Under the Curve (AUC) over 0.85, and an F1-score over 0.8.
 
 ### Solution
 
@@ -15,6 +18,8 @@ The solution, ArachNode, employs a hybrid approach, integrating feature engineer
 
 ### Design and Development Choices
 The ArachNode neural network model, built using TensorFlow's Keras API, is a feed-forward, fully connected architecture with an input layer of 128 neurons, a hidden layer of 64 neurons, and an optimized output layer of 3 neurons to match the three categories: clickable, informative, and structural. The model uses ReLU activation functions for computational efficiency and softmax for the output layer. It's configured with an input shape of 1600 to accommodate the extensive feature set derived from DOM attributes. The Adam optimizer and categorical_crossentropy loss function are employed for their suitability in handling large datasets and multi-class classification. To mitigate overfitting, dropout layers have been added. Evaluation metrics include accuracy, AUC, and F1-score to provide a comprehensive assessment of the model's performance. Programmatically, data is collected using a set of Chrome Extension JavaScript functions, stored in AWS S3, and interfaced with using AWS API Gateway. Selenium Python is used for data verification collection.
+
+<img src="assets/result.webp" width="650">
 
 ### Result
 The ArachNode project is not yet complete, but is underway with training to discriminate between clickable and non-clickable elements (two of the three classifiers given above). Using just 5 search instances with over 1200 DOM elements, the AI has proven to be 32.8% accurate with an AUC of 0.68 and F1-score of 0.45. An AUC higher than 0.5 implies that the model does not apply random guesswork, but the combination of the three metrics leave much room for improvement in precision, recall, and accuracy. The below images show data collection with a custom built Chrome Extension and API, the Python training architecture for the model, and the AI architecture for predicting user browser actions.
