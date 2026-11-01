@@ -1,10 +1,13 @@
 # ArachNode
 
+> [!NOTE]
+> This project was not brought to completion, but was left incomplete at training. This was primarily because the training of the model required intensive labeling of data using a terminal GUI. Given that I didn't have the time to implement this, the project was paused after a few short tests. The final test used 5 search instances with 32.8% measured accuracy is close to 1/3 which is what the 3-class output would produce if guessing blindly. The model itself used an input of 1,600 elements - training a model of this size would require thousands of search instances and automated labeling. This project would be an exciting one to pick up during my Master's with the aid of multiple local LLM instances to efficiently train the model in parallel.
+
 For more information, see the [Case Study](https://www.drebarrera.com/project/arachnode)
 
 ### Challenge
 
-The challenge of ArachNode was to create an AI program capable of navigating the complex and dynamic landscape of the web to identify specific information. Traditional scraping methods often fall short in handling intricate navigation and decision-making. The goal was to design an intelligent system that could provide efficient browsing behavior, making decisions on when to click on links or backtrack, and do so with over 80% accuracy, an Area Under the Curve (AUC) over 0.85, and an F1-score over 0.8.
+The challenge of ArachNode was to create an AI program capable of navigating the complex and dynamic landscape of the web to identify specific information based on structural components (tags, properties, and events). Traditional scraping methods often fall short in handling intricate navigation and decision-making. The goal was to design an intelligent system that could provide efficient browsing behavior, making decisions on when to click on links or backtrack, and do so with over 80% accuracy, an Area Under the Curve (AUC) over 0.85, and an F1-score over 0.8.
 
 ### Solution
 
