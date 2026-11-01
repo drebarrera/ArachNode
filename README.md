@@ -22,7 +22,7 @@ The ArachNode neural network model, built using TensorFlow's Keras API, is a fee
 <img src="assets/result.webp" width="650">
 
 ### Result
-The ArachNode project is not yet complete, but is underway with training to discriminate between clickable and non-clickable elements (two of the three classifiers given above). Using just 5 search instances with over 1200 DOM elements, the AI has proven to be 32.8% accurate with an AUC of 0.68 and F1-score of 0.45. An AUC higher than 0.5 implies that the model does not apply random guesswork, but the combination of the three metrics leave much room for improvement in precision, recall, and accuracy. The below images show data collection with a custom built Chrome Extension and API, the Python training architecture for the model, and the AI architecture for predicting user browser actions.
+The ArachNode project is not yet complete, but is underway with training to discriminate between clickable and non-clickable elements (two of the three classifiers given above). Using just 5 search instances with over 1200 DOM elements, the AI has proven to be 32.8% accurate with an AUC of 0.68 and F1-score of 0.45. An AUC higher than 0.5 implies that the model does not apply random guesswork, but the combination of the three metrics leave much room for improvement in precision, recall, and accuracy. The below images show data collection with a custom built Chrome Extension and API, the Python training architecture for the model, and the AI architecture for predicting user browser actions
 
 ### Repository Structure
 This repository is composed of two sets of code:
